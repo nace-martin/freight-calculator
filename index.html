@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EFM - Domestic Air Freight Calculator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>EFM Domestic Air Freight Calculator</h1>
+            <img src="https://expressfreight.com/wp-content/themes/efm-veribo/assets/img/logo.svg" alt="Express Freight Management Logo">
+        </div>
+
+        <div id="calculator-form">
+            <div class="form-section">
+                <h2>Routing</h2>
+                <div class="form-group"><label for="origin">Origin</label><select id="origin" name="origin"></select></div>
+                <div class="form-group"><label for="destination">Destination</label><select id="destination" name="destination"></select></div>
+            </div>
+            <div class="form-section">
+                <h2>Shipment Details</h2>
+                <div id="pieces-container">
+                    <template id="piece-row-template">
+                        <div class="piece-row">
+                            <input type="number" class="weight" placeholder="Wt (kg)">
+                            <input type="number" class="length" placeholder="L (cm)">
+                            <input type="number" class="width" placeholder="W (cm)">
+                            <input type="number" class="height" placeholder="H (cm)">
+                            <button type="button" class="btn-remove">X</button>
+                        </div>
+                    </template>                    
+                    <div class="piece-row">
+                        <input type="number" class="weight" placeholder="Wt (kg)"><input type="number" class="length" placeholder="L (cm)"><input type="number" class="width" placeholder="W (cm)"><input type="number" class="height" placeholder="H (cm)">
+                        <button type="button" class="btn-remove" style="visibility: hidden;">X</button>
+                    </div>
+                </div>
+                <button type="button" id="add-piece-btn" class="btn-add">+ Add Piece</button>
+            </div>
+            <div class="form-group">
+                <label>Total Chargeable Weight</label>
+                <p style="font-size: 1.5em; font-weight: bold;"><strong id="chargeableWeightDisplay">0</strong> kg</p>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button type="button" id="generate-quote-btn" class="btn-generate">Generate Quote</button>
+            <button type="button" id="reset-btn" class="btn-reset">Reset</button>
+            <button type="button" id="download-pdf-btn" class="btn-generate" style="display: none;">Download PDF</button>
+        </div>
+
+        <div id="quote-output"></div>
+    </div>
+
+<script src="script.js"></script>
+</body>
+</html>
