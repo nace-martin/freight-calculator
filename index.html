@@ -14,9 +14,13 @@
 <body>
 
     <div class="container">
+        <div id="loading-spinner" class="spinner-container" style="display: none;">
+            <div class="spinner"></div>
+    </div>
         <div class="header">
             <h1>EFM Domestic Air Freight Calculator</h1>
             <img src="https://expressfreight.com/wp-content/themes/efm-veribo/assets/img/logo.svg" alt="Express Freight Management Logo">
+            <button id="logout-btn" class="btn-remove" style="padding: 10px 15px;">Logout</button>
         </div>
 
         <div id="calculator-form">
@@ -36,7 +40,7 @@
                             <input type="number" class="height" placeholder="H (cm)">
                             <button type="button" class="btn-remove">X</button>
                         </div>
-                    </template>                    
+                    </template>
                     <div class="piece-row">
                         <input type="number" class="weight" placeholder="Wt (kg)"><input type="number" class="length" placeholder="L (cm)"><input type="number" class="width" placeholder="W (cm)"><input type="number" class="height" placeholder="H (cm)">
                         <button type="button" class="btn-remove" style="visibility: hidden;">X</button>

@@ -1,83 +1,22 @@
+/* Main Stylesheet - imports all components */
 
-        :root {
-            --primary-color: #002D62; /* EFM Corporate Blue */
-            --danger-color: #D42E28;   /* EFM Corporate Red */
-            --secondary-color: #6c757d; /* A calm grey for secondary actions */
-            --background-color: #f8f9fa;
-            --form-background-color: #ffffff;
-            --text-color: #212529;
-            --border-color: #dee2e6;
-            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-        body {
-            font-family: 'Poppins', sans-serif;
-            margin: 0;
-            padding: 2em;
-            background-color: var(--background-color);
-            color: var(--text-color);
-        }
-        .container {
-            max-width: 800px;
-            margin: auto;
-            background: var(--form-background-color);
-            padding: 2em 2.5em;
-            border-radius: 12px;
-            box-shadow: var(--box-shadow);
-        }
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 1em;
-            margin-bottom: 1em;
-        }
-        .header img { height: 40px; }
-        h1 { font-size: 1.75em; margin: 0; color: var(--primary-color); }
-        h2 { font-size: 1.5em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5em; margin-bottom: 1em; }
-        .form-section { margin-bottom: 1.5em; }
-        .form-group { margin-bottom: 1.5em; }
-        label { display: block; margin-bottom: 0.5em; font-weight: 600; font-size: 0.9em; }
-        input[type="number"], select {
-            width: 100%;
-            padding: 12px;
-            box-sizing: border-box;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 1em;
-            font-family: 'Poppins', sans-serif;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        input[type="number"]:focus, select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(0, 45, 98, 0.25);
-        }
-        input:disabled, select:disabled {
-            background-color: #e9ecef;
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
-        button {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1em;
-            font-weight: 600;
-            font-family: 'Poppins', sans-serif;
-            cursor: pointer;
-            transition: transform 0.1s, background-color 0.2s;
-        }
-        button:hover { transform: translateY(-2px); }
-        .btn-generate { background-color: var(--primary-color); color: white; }
-        .btn-add { background-color: #343a40; color: white; }
-        .btn-remove { background-color: var(--danger-color); color: white; padding: 5px 10px; font-size: 0.8em; }
-        .btn-reset { background-color: var(--secondary-color); color: white; }
-        .action-buttons { display: flex; gap: 1em; margin-top: 1.5em; }
-        .piece-row { display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 1em; align-items: center; margin-bottom: 1em; }
-        #quote-output { margin-top: 2em; border-top: 2px solid var(--border-color); padding-top: 1.5em; }
-        #quote-output ul { list-style-type: none; padding: 0; }
-        #quote-output li { display: flex; justify-content: space-between; padding: 0.75em; border-bottom: 1px solid #f1f1f1; }
-        #quote-output li:nth-child(even) { background-color: #fdfdff; }
-        #quote-output h3, #quote-output h2 { text-align: right; border-bottom: none; }
-        #quote-output .total-line { border-top: 2px solid var(--text-color); padding-top: 1em; margin-top: 1em; }
+@import url('./styles/global.css');
+@import url('./styles/layout.css');
+@import url('./styles/header.css');
+@import url('./styles/form.css');
+@import url('./styles/button.css');
+@import url('./styles/spinner.css');
+
+
+/* You can add any remaining page-specific styles here */
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 2em;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+#quote-output {
+    /* ... quote output specific styles ... */
+}

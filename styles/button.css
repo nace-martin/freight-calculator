@@ -1,0 +1,23 @@
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.2s;
+        }
+        button:hover { transform: translateY(-2px); }
+        .btn-generate { background-color: var(--primary-color); color: white; }
+        .btn-add { background-color: #343a40; color: white; }
+        .btn-remove { background-color: var(--danger-color); color: white; padding: 5px 10px; font-size: 0.8em; }
+        .btn-reset { background-color: var(--secondary-color); color: white; }
+        .action-buttons { display: flex; gap: 1em; margin-top: 1.5em; }
+        .piece-row { display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 1em; align-items: center; margin-bottom: 1em; }
+        #quote-output { margin-top: 2em; border-top: 2px solid var(--border-color); padding-top: 1.5em; }
+        #quote-output ul { list-style-type: none; padding: 0; }
+        #quote-output li { display: flex; justify-content: space-between; padding: 0.75em; border-bottom: 1px solid #f1f1f1; }
+        #quote-output li:nth-child(even) { background-color: #fdfdff; }
+        #quote-output h3, #quote-output h2 { text-align: right; border-bottom: none; }
+        #quote-output .total-line { border-top: 2px solid var(--text-color); padding-top: 1em; margin-top: 1em; }
