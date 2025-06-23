@@ -66,8 +66,11 @@ function setupEventListeners(elements) {
                 return;
             }
 
-            const userId = auth.currentUser.uid;
-            const dataToSave = {
+            if (!auth.currentUser) {
+                alert("You must be logged in to save a quote.");
+                return;
+            }
+            const userId = auth.currentUser.uid;            const dataToSave = {
                 ...state.currentQuoteData,
                 userId: userId
             };
@@ -168,9 +171,12 @@ async function initializeApp() {
         chargeableWeightDisplay: document.getElementById('chargeableWeightDisplay'),
         form: document.getElementById('calculator-form'),
         pieceRowTemplate: document.getElementById('piece-row-template'),
-        logoutBtn: document.getElementById('logout-btn')
+        logoutBtn: document.getElementById('nav-logout-btn')
     };
-
+const navTitleElement = document.getElementById('app-nav-title');
+    if (navTitleElement) {
+        navTitleElement.textContent = 'Domestic Air Freight Calculator';
+    }
     // --- ADD THESE CONSOLE LOGS ---
     console.log('--- Debugging Elements ---');
     for (const key in elements) {
@@ -221,12 +227,18 @@ onAuthStateChanged(auth, user => {
   if (user) {
     // User is signed in. Now check if the DOM is ready.
     if (document.readyState === 'loading') {
-        // If the DOM is still loading, wait for DOMContentLoaded event
         document.addEventListener('DOMContentLoaded', initializeApp, { once: true });
     } else {
-        // If the DOM is already interactive or complete, initialize immediately
         initializeApp();
     }
+    // NEW: If a logged-in user lands on index.html (the calculator page),
+    // redirect them to the dashboard. They can navigate back to index.html from the dashboard.
+    // Ensure this redirection only happens once to avoid loops.
+    if (window.location.pathname.endsWith('index.html') && !window.sessionStorage.getItem('redirectedToDashboard')) {
+        window.sessionStorage.setItem('redirectedToDashboard', 'true'); // Set a flag to prevent immediate re-redirection
+        window.location.href = 'dashboard.html'; // ADD THIS LINE
+    }
+
   } else {
     // User is signed out. Redirect to login.
     window.location.href = 'login.html';

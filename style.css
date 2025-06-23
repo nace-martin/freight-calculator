@@ -2,21 +2,117 @@
 
 @import url('./styles/global.css');
 @import url('./styles/layout.css');
-@import url('./styles/header.css');
 @import url('./styles/form.css');
 @import url('./styles/button.css');
 @import url('./styles/spinner.css');
 
 
-/* You can add any remaining page-specific styles here */
+/* Global Body Styles - Crucial for edge-to-edge header */
 body {
     font-family: 'Poppins', sans-serif;
-    margin: 0;
-    padding: 2em;
+    margin: 0; /* REMOVE DEFAULT BROWSER MARGIN */
+    padding: 0; /* REMOVE DEFAULT BROWSER PADDING */
     background-color: var(--background-color);
     color: var(--text-color);
 }
 
 #quote-output {
     /* ... quote output specific styles ... */
+}
+
+/* === CONSOLIDATED HEADER & NAVIGATION STYLES - FINAL ALIGNMENT === */
+
+/* Wrapper for the entire top section of the app - now truly full width edge-to-edge */
+.app-header {
+    width: 100%;
+    background-color: var(--primary-color); /* Matches navbar background to stretch across the page */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); /* Added a subtle shadow for depth */
+    margin-bottom: 2em; /* Increased space below the entire header + nav */
+    padding: 1em 0; /* Vertical padding applied here for the whole header band */
+}
+
+/* The main navigation bar - content inside the full-width header */
+.navbar {
+    width: 100%; /* Make navbar stretch 100% width of its parent (.app-header) */
+    max-width: 1400px; /* Maintain content max width to prevent stretching too wide on very large screens */
+    margin: 0 auto; /* Center the constrained content within the full-width header */
+    display: flex;
+    justify-content: space-between; /* Spreads out left content, links, and logout */
+    align-items: center;
+    color: white;
+    flex-wrap: wrap; /* Allow items to wrap on smaller screens if necessary */
+    gap: 1.5em; /* Increased gap between main flex items for spaciousness */
+    padding: 0 2em; /* Apply HORIZONTAL padding here to push content from screen edges */
+    border-radius: 0; /* Remove border-radius if the bar is edge-to-edge */
+}
+
+.navbar-left-section {
+    display: flex;
+    align-items: center;
+    gap: 1em; /* Increased space between logo and title */
+    flex-shrink: 0; /* Prevent this section from shrinking too much */
+}
+
+.navbar-left-section img {
+    height: 40px; /* Slightly larger logo within the nav bar */
+    vertical-align: middle;
+}
+
+.navbar-left-section h2 {
+    font-size: 1.4em; /* Slightly larger title within the nav bar */
+    color: white;
+    margin: 0;
+    border-bottom: none;
+    font-weight: 700; /* Bolder font weight for emphasis */
+    white-space: nowrap; /* Prevent title from wrapping onto multiple lines */
+}
+
+.navbar-links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap; /* Allow links to wrap if needed for responsiveness */
+    gap: 1.5em; /* Increased space between individual nav links */
+    flex-grow: 1; /* Allow links section to take up available space */
+    justify-content: center; /* Center links within their growing space */
+    margin: 0 1.5em; /* Added side margins to push links slightly from logo/logout */
+}
+
+.navbar-links li a {
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 0.7em 1.2em; /* Increased padding for larger clickable area and better look */
+    border-radius: 8px; /* More rounded corners for a modern "pill" shape */
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out; /* Added transform for subtle hover effect */
+    white-space: nowrap; /* Prevent links from breaking mid-word */
+    display: block; /* Make the whole padding area clickable */
+}
+
+.navbar-links li a:hover {
+    background-color: rgba(255, 255, 255, 0.25); /* More prominent highlight on hover */
+    transform: translateY(-1px); /* Subtle lift effect on hover */
+}
+
+.navbar button#nav-logout-btn {
+    background-color: var(--danger-color); /* EFM Corporate Red for Logout button */
+    color: white;
+    padding: 0.7em 1.5em; /* Increased padding for a more prominent button */
+    border-radius: 8px; /* Rounded corners for the button */
+    font-weight: 600;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+    margin-left: auto; /* This pushes the button to the far right */
+    flex-shrink: 0; /* Prevent logout button from shrinking */
+}
+
+/* Ensure the main .container (for page content) has correct spacing */
+.container {
+    max-width: 800px; /* Keep this for the main content area */
+    margin: auto; /* Center the container */
+    background: var(--form-background-color);
+    padding: 2em 2.5em; /* This padding is for the content *inside* the container */
+    border-radius: 12px;
+    box-shadow: var(--box-shadow);
+    margin-top: 0; /* Ensure no top margin */
 }

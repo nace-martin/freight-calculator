@@ -9,9 +9,9 @@ import {
 onAuthStateChanged(auth, user => {
     if (user) {
         // If the user is already logged in, don't show the login page.
-        // Redirect them immediately to the main application.
-        console.log("User is already logged in. Redirecting to app...");
-        window.location.href = 'index.html';
+        // Redirect them immediately to the new dashboard.
+        console.log("User is already logged in. Redirecting to dashboard...");
+        window.location.href = 'dashboard.html'; // CHANGE THIS LINE
     }
     // The code below will only run if the user is NOT logged in.
     else {
@@ -20,9 +20,7 @@ onAuthStateChanged(auth, user => {
         const loginBtn = document.getElementById('login-btn');
         const errorMsg = document.getElementById('error-message');
 
-        // Only add the event listener if the login button exists on the page
         if (loginBtn) {
-            // Event listener for the Login button
             loginBtn.addEventListener('click', () => {
                 const email = emailInput.value;
                 const password = passwordInput.value;
@@ -36,8 +34,8 @@ onAuthStateChanged(auth, user => {
                     .then(userCredential => {
                         // Login successful
                         console.log('User logged in:', userCredential.user);
-                        // Redirect to the main calculator page
-                        window.location.href = 'index.html';
+                        // Redirect to the new dashboard page
+                        window.location.href = 'dashboard.html'; // CHANGE THIS LINE
                     })
                     .catch(error => {
                         // Handle login errors

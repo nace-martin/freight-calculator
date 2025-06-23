@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RateEngine - Dashboard</title> 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="app-header">
+        <nav class="navbar">
+            <div class="navbar-left-section">
+                <img src="https://expressfreight.com/wp-content/themes/efm-veribo/assets/img/logo.svg" alt="Express Freight Management Logo">
+                <h2 id="app-nav-title"></h2> 
+            </div>
+            <ul class="navbar-links">
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="index.html">New Quote</a></li>
+                <li><a href="#">My Quotes</a></li>
+            </ul>
+            <button id="nav-logout-btn" class="btn-remove" style="padding: 8px 12px;">Logout</button>
+        </nav>
+    </header>
+
+    <div class="container"> 
+        <div id="loading-spinner" class="spinner-container" style="display: none;">
+            <div class="spinner"></div>
+        </div>
+
+        <div class="content-area"> 
+            <h2>Dashboard Overview</h2>
+            <p>This is your personalized dashboard. From here, you can access various tools and features.</p>
+            <p>Click the link below to access the Domestic Air Freight Calculator:</p>
+            <p><a href="index.html" class="btn-generate">Go to Calculator</a></p>
+        </div>
+
+    </div> <script type="module" src="firebase-config.js"></script>
+    <script type="module">
+        // Basic auth guard for dashboard.html
+        import { auth } from './firebase-config.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+
+        onAuthStateChanged(auth, user => {
+            if (!user) {
+                // If user is not logged in, redirect to login page
+                window.location.href = 'login.html';
+            } else {
+                console.log("User logged in on dashboard.");
+                // Set the specific title for this page's navigation bar
+                const navTitleElement = document.getElementById('app-nav-title');
+                if (navTitleElement) {
+                    navTitleElement.textContent = 'RateEngine - Dashboard'; 
+                }
+
+                // Set up the logout button listener for the dashboard page.
+                const logoutBtn = document.getElementById('nav-logout-btn'); 
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', () => {
+                        auth.signOut().then(() => {
+                            console.log('User signed out successfully from dashboard.');
+                        }).catch((error) => {
+                            console.error('Sign out error from dashboard:', error);
+                            alert("Error signing out. Please try again.");
+                        });
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>
