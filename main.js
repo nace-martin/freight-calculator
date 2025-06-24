@@ -9,7 +9,8 @@ import {
     addPiece,
     resetApp,
     generateQuote,
-    toggleFormLock
+    toggleFormLock,
+    formatCurrency
 } from './ui.js';
 import { saveQuoteToDb } from './database.js';
 
@@ -109,35 +110,72 @@ function setupEventListeners(elements) {
     }
 
 
-    if (elements.downloadPdfBtn) {
-        elements.downloadPdfBtn.addEventListener('click', () => {
-            const headerToPrint = document.querySelector('.app-header'); // Corrected selector
-            const quoteToPrint = document.getElementById('quote-output');
-            if (quoteToPrint.innerHTML.trim() === "") return;
+if (elements.downloadPdfBtn) {
+        // Make the event listener async to use await for fetching the template
+        elements.downloadPdfBtn.addEventListener('click', async () => {
+            if (!state.currentQuoteData) {
+                alert("Cannot generate PDF. No quote data available.");
+                return;
+            }
 
-            const printableArea = document.createElement('div');
-            printableArea.appendChild(headerToPrint.cloneNode(true));
-            printableArea.appendChild(quoteToPrint.cloneNode(true));
+            try {
+                // 1. Fetch the HTML template content
+                const response = await fetch('quote-template.html');
+                if (!response.ok) throw new Error('Quote template not found.');
+                let templateHtml = await response.text();
 
-            const opt = {
-                margin: 0.5,
-                filename: `EFM_Quote_${Date.now()}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-            };
-            if (typeof window.html2pdf === 'function') {
-                window.html2pdf().set(opt).from(printableArea).save();
-            } else {
-                console.error("html2pdf library not found. Make sure it's loaded before main.js.");
-                alert("PDF download not available. Please try again or contact support.");
+                // 2. Prepare the data
+                const quote = state.currentQuoteData;
+                const quoteDate = new Date(quote.quoteGeneratedAt).toLocaleDateString('en-AU');
+                
+                // Create HTML for line items
+                const lineItemsHtml = quote.lineItems
+                    .map(item => `<tr><td>${item.name}</td><td class="line-item-cost">${formatCurrency(item.cost)}</td></tr>`)
+                    .join('');
+
+                // 3. Replace placeholders in the template with actual data
+                templateHtml = templateHtml
+                    .replace('{{clientName}}', 'Valued Client') // Placeholder for now
+                    .replace('{{clientAddress}}', '') // Placeholder for now
+                    .replace('{{clientContact}}', '') // Placeholder for now
+                    .replace('{{quoteDate}}', quoteDate)
+                    .replace('{{quoteId}}', `Q-${Date.now()}`) // Generate a simple unique ID
+                    .replace('{{origin}}', quote.origin)
+                    .replace('{{destination}}', quote.destination)
+                    .replace('{{chargeableWeight}}', quote.chargeableWeight)
+                    .replace('{{lineItems}}', lineItemsHtml)
+                    .replace('{{subTotal}}', formatCurrency(quote.subTotal))
+                    .replace('{{gst}}', formatCurrency(quote.gst))
+                    .replace('{{grandTotal}}', formatCurrency(quote.grandTotal));
+
+                // 4. Configure and run html2pdf on the populated template
+                const opt = {
+                    margin: 0.5,
+                    filename: `EFM_Quote_${Date.now()}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+                };
+
+                if (typeof window.html2pdf === 'function') {
+                    // We are creating a new element to avoid affecting the main page
+                    const printableArea = document.createElement('div');
+                    printableArea.innerHTML = templateHtml;
+                    window.html2pdf().set(opt).from(printableArea).save();
+                } else {
+                    console.error("html2pdf library not found.");
+                    alert("PDF download not available.");
+                }
+
+            } catch (error) {
+                console.error("PDF Generation Error:", error);
+                alert("Could not generate PDF. Please see the console for details.");
             }
         });
         console.log("Listener attached: downloadPdfBtn");
     } else {
         console.error("CRITICAL ERROR: downloadPdfBtn is null. Cannot attach listener.");
     }
-
     if (elements.logoutBtn) {
         elements.logoutBtn.addEventListener('click', () => {
             auth.signOut().then(() => {

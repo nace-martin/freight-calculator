@@ -116,3 +116,62 @@ body {
     box-shadow: var(--box-shadow);
     margin-top: 0; /* Ensure no top margin */
 }
+
+/* --- New Styles for the Quote Breakdown Costing Sheet --- */
+
+/* The main container for the generated quote */
+#quote-output {
+    margin-top: 2em;
+    border-top: 2px solid var(--border-color);
+    padding-top: 1.5em;
+}
+
+/* The table itself */
+.quote-breakdown-table {
+    width: 100%;
+    border-collapse: collapse; /* Ensures borders are clean */
+    margin-top: 1em;
+    font-size: 0.95em; /* Slightly smaller font for a cleaner look */
+}
+
+/* Styling for all table cells (headers and data) */
+.quote-breakdown-table th,
+.quote-breakdown-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #e9ecef; /* Light border for rows */
+}
+
+/* Header row specific styles */
+.quote-breakdown-table thead th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    border-bottom-width: 2px;
+    border-bottom-color: var(--border-color);
+}
+
+/* Right-align all numerical columns */
+.quote-breakdown-table th:nth-child(2),
+.quote-breakdown-table td:nth-child(2),
+.quote-breakdown-table th:nth-child(3),
+.quote-breakdown-table td:nth-child(3),
+.quote-breakdown-table th:nth-child(4),
+.quote-breakdown-table td:nth-child(4),
+.quote-breakdown-table th:nth-child(5),
+.quote-breakdown-table td:nth-child(5) {
+    text-align: right;
+}
+
+/* Totals row (tfoot) specific styles */
+.quote-breakdown-table tfoot td {
+    font-weight: bold;
+    color: var(--primary-color);
+    border-top: 2px solid var(--text-color);
+    padding-top: 15px;
+}
+
+/* Specific alignment for the "Totals" label cell */
+.quote-breakdown-table tfoot td[colspan="2"] {
+    text-align: right;
+    color: #343a40;
+}

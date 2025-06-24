@@ -12,18 +12,49 @@ export function formatCurrency(number) {
 // --- DOM Manipulation Functions ---
 
 export function renderQuoteHTML(elements, quoteData) {
-    let quoteHTML = `<h2>Quote Breakdown</h2><p><b>Route:</b> ${quoteData.origin} to ${quoteData.destination}</p><p><b>Total Chargeable Weight:</b> ${quoteData.chargeableWeight} kg</p>`;
-    quoteHTML += '<ul>';
+    let quoteHTML = `
+        <h2>Charge Summary</h2>
+        <p><b>Route:</b> ${quoteData.origin} to ${quoteData.destination} | <b>Chargeable Weight:</b> ${quoteData.chargeableWeight} kg</p>
+        <table class="quote-breakdown-table">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Rate</th>
+                    <th>Subtotal</th>
+                    <th>GST</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
     quoteData.lineItems.forEach(item => {
-        quoteHTML += `<li><span>${item.name}</span><strong>PGK ${formatCurrency(item.cost)}</strong></li>`;
+        quoteHTML += `
+            <tr>
+                <td>${item.name}</td>
+                <td>${item.rate.toFixed(2)}</td>
+                <td>${formatCurrency(item.subTotal)}</td>
+                <td>${formatCurrency(item.gst)}</td>
+                <td>${formatCurrency(item.total)}</td>
+            </tr>
+        `;
     });
-    quoteHTML += '</ul>';
-    quoteHTML += `<h3>Sub-Total: PGK ${formatCurrency(quoteData.subTotal)}</h3>`;
-    quoteHTML += `<h3>GST (10%): PGK ${formatCurrency(quoteData.gst)}</h3>`;
-    quoteHTML += `<h2 class="total-line">Grand Total: PGK ${formatCurrency(quoteData.grandTotal)}</h2>`;
+
+    quoteHTML += `
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2"><strong>Totals</strong></td>
+                    <td><strong>${formatCurrency(quoteData.subTotal)}</strong></td>
+                    <td><strong>${formatCurrency(quoteData.gst)}</strong></td>
+                    <td><strong>${formatCurrency(quoteData.grandTotal)}</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    `;
 
     elements.quoteOutputDiv.innerHTML = quoteHTML;
 }
+
 
 export function populateDropdowns(elements, locations) {
     elements.originSelect.innerHTML = '';
@@ -110,47 +141,91 @@ export function generateQuote(elements, freightRates) {
     if (!route || route.rate <= 0) { alert(`Sorry, a rate for ${origin} to ${destination} is not available.`); return null; }
 
     const lineItems = [];
-    lineItems.push({ name: 'Air Freight', cost: chargeableWeight * route.rate });
+    
+    // --- Helper to build each line item ---
+    const buildLineItem = (name, rate, calculationValue, isPercentage = false, minCharge = 0) => {
+        let subTotal;
+        let displayRate = rate;
+
+        if (isPercentage) {
+            subTotal = calculationValue * rate; // calculationValue is the cost this surcharge depends on
+        } else {
+            subTotal = calculationValue === 0 ? rate : calculationValue * rate; // calculationValue is weight or 0 for flat fees
+        }
+
+        if (minCharge > 0 && subTotal < minCharge) {
+            subTotal = minCharge;
+        }
+
+        const gst = subTotal * 0.10;
+        const total = subTotal + gst;
+        
+        return { name, rate: displayRate, subTotal, gst, total };
+    };
+    
+    // --- Build Line Items ---
+    
+    // 1. Air Freight
+    const airFreightItem = buildLineItem('Air Freight', route.rate, chargeableWeight);
+    lineItems.push(airFreightItem);
+
+    // 2. Ancillary Charges (excluding PUD-related fees)
     ancillaryCharges.forEach(charge => {
-        if (charge.name.includes('PUD')) return;
-        let cost = 0;
-        if (charge.type === 'Per-Shipment') cost = charge.rate;
-        else if (charge.type === 'Per-KG') { cost = chargeableWeight * charge.rate; if (cost < charge.min) cost = charge.min; }
-        if (cost > 0) lineItems.push({ name: charge.name, cost: cost });
+        // *** THE FIX IS HERE: We skip PUD charges in this generic loop ***
+        if (charge.name.includes('PUD') || charge.dependsOn === 'PUD Fee') {
+            return; 
+        }
+
+        if (charge.type === 'Per-Shipment') {
+            const item = buildLineItem(charge.name, charge.rate, 0); // 0 for flat fee calculation
+            lineItems.push(item);
+        } else if (charge.type === 'Per-KG') {
+            const item = buildLineItem(charge.name, charge.rate, chargeableWeight, false, charge.min);
+            lineItems.push(item);
+        }
     });
+
+    // 3. PUD Charges (This is now the ONLY place PUD charges are handled)
     const validPudLocations = ['POM', 'LAE'];
     if (validPudLocations.includes(origin) || validPudLocations.includes(destination)) {
         const pudChargeItem = ancillaryCharges.find(c => c.name === 'PUD Fee');
-        let pudCost = chargeableWeight * pudChargeItem.rate;
-        if (pudCost < pudChargeItem.min) pudCost = pudChargeItem.min;
-        lineItems.push({ name: 'PUD Fee', cost: pudCost });
-        const pudFuelChargeItem = ancillaryCharges.find(c => c.dependsOn === 'PUD Fee');
-        if (pudFuelChargeItem) { lineItems.push({ name: 'PUD Fuel Surcharge', cost: pudCost * pudFuelChargeItem.rate }); }
+        if (pudChargeItem) {
+            const pudItem = buildLineItem('PUD Fee', pudChargeItem.rate, chargeableWeight, false, pudChargeItem.min);
+            lineItems.push(pudItem);
+            
+            const pudFuelChargeItem = ancillaryCharges.find(c => c.dependsOn === 'PUD Fee');
+            if (pudFuelChargeItem) {
+                // The calculation value for the fuel surcharge is the final subtotal of the PUD Fee itself.
+                const pudFuelItem = buildLineItem('PUD Fuel Surcharge', pudFuelChargeItem.rate, pudItem.subTotal, true);
+                lineItems.push(pudFuelItem);
+            }
+        }
     }
 
     lineItems.sort((a,b) => a.name.localeCompare(b.name));
-
-    const subTotal = lineItems.reduce((sum, item) => sum + item.cost, 0);
-    const gst = subTotal * 0.10;
-    const grandTotal = subTotal + gst;
+    
+    // Final grand totals are calculated from the sum of the detailed lines
+    const grandTotalSubTotal = lineItems.reduce((sum, item) => sum + item.subTotal, 0);
+    const grandTotalGst = lineItems.reduce((sum, item) => sum + item.gst, 0);
+    const grandTotal = lineItems.reduce((sum, item) => sum + item.total, 0);
 
     const quoteData = {
         origin,
         destination,
         chargeableWeight,
         lineItems,
-        subTotal,
-        gst,
-        grandTotal,
+        subTotal: grandTotalSubTotal,
+        gst: grandTotalGst,
+        grandTotal: grandTotal,
         quoteGeneratedAt: new Date().toISOString()
     };
     
     renderQuoteHTML(elements, quoteData);
     toggleFormLock(elements, true);
     
-    // Show the action buttons using the elements object for consistency
     elements.saveQuoteBtn.style.display = 'inline-block';
     elements.downloadPdfBtn.style.display = 'inline-block';
 
     return quoteData;
 }
+

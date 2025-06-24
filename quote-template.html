@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quotation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      font-size: 10px;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+    }
+
+    .quote-container {
+      width: 100%;
+      max-width: 520px; /* Reduced for PDF compatibility */
+      margin: 0 auto;
+      padding: 15px; /* Reduced padding */
+      box-sizing: border-box;
+    }
+
+    .layout-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed; /* Force consistent column widths */
+    }
+
+    .header-cell-left {
+      width: 45%;
+      vertical-align: top;
+      padding-right: 10px;
+    }
+
+    .header-cell-right {
+      width: 55%;
+      text-align: right;
+      vertical-align: top;
+      line-height: 1.4;
+      padding-left: 10px;
+    }
+
+    .header-cell-right h1 {
+      font-size: 22px; /* Slightly smaller */
+      color: #002D62;
+      margin: 0 0 5px 0;
+      font-weight: 700;
+    }
+
+    .header-separator {
+      border-bottom: 3px solid #002D62;
+      height: 15px; /* Reduced height */
+    }
+
+    .info-cell {
+      padding: 8px; /* Reduced padding */
+      background-color: #f8f9fa;
+      border-radius: 3px;
+      vertical-align: top;
+      line-height: 1.4;
+      width: 50%;
+    }
+
+    h2 {
+      font-size: 12px; /* Smaller heading */
+      font-weight: 600;
+      color: #002D62;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #dee2e6;
+      padding-bottom: 3px;
+    }
+
+    .breakdown-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .breakdown-table th, .breakdown-table td {
+      padding: 6px 4px; /* Reduced padding */
+      text-align: left;
+      border-bottom: 1px solid #dee2e6;
+      page-break-inside: avoid;
+      word-wrap: break-word;
+    }
+
+    .breakdown-table th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+    }
+
+    .breakdown-table col:first-child {
+      width: 70%; /* Description column */
+    }
+
+    .breakdown-table col:last-child {
+      width: 30%; /* Cost column */
+    }
+
+    .cost-col {
+      text-align: right;
+    }
+
+    .breakdown-table tfoot td {
+      border-bottom: none;
+    }
+
+    .totals-label {
+      text-align: right;
+      font-weight: 600;
+    }
+
+    .grand-total td {
+      font-size: 11px;
+      font-weight: bold;
+      color: #002D62;
+      border-top: 2px solid #333 !important;
+      padding-top: 6px !important;
+    }
+
+    .footer {
+      margin-top: 20px;
+      padding-top: 10px;
+      border-top: 1px solid #dee2e6;
+      font-size: 8px;
+      color: #777;
+      text-align: center;
+    }
+
+    /* PDF-specific styles */
+    @media print {
+      body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      
+      .quote-container {
+        max-width: none;
+        width: 100%;
+        padding: 10px;
+      }
+    }
+
+    /* Ensure logo doesn't overflow */
+    .logo-img {
+      max-width: 140px;
+      height: auto;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="quote-container">
+    <!-- HEADER -->
+    <table class="layout-table">
+      <colgroup>
+        <col style="width: 45%;">
+        <col style="width: 55%;">
+      </colgroup>
+      <tr>
+        <td class="header-cell-left">
+          <img src="https://expressfreight.com/wp-content/themes/efm-veribo/assets/img/logo.svg" 
+               alt="EFM Logo" 
+               class="logo-img" />
+        </td>
+        <td class="header-cell-right">
+          <h1>QUOTATION</h1>
+          <strong>Express Freight Management</strong><br />
+          Section 4, Lot 7, Waigani Drive<br />
+          Port Moresby, NCD, Papua New Guinea
+        </td>
+      </tr>
+      <tr><td colspan="2" class="header-separator"></td></tr>
+    </table>
+
+    <!-- INFO -->
+    <table class="layout-table" style="margin-top: 15px;">
+      <colgroup>
+        <col style="width: 50%;">
+        <col style="width: 50%;">
+      </colgroup>
+      <tr>
+        <td class="info-cell">
+          <strong>QUOTE FOR:</strong><br />
+          {{clientName}}<br />
+          {{clientAddress}}<br />
+          {{clientContact}}
+        </td>
+        <td class="info-cell">
+          <strong>Quote Date:</strong> {{quoteDate}}<br />
+          <strong>Quote ID:</strong> {{quoteId}}<br />
+          <strong>Route:</strong> {{origin}} → {{destination}}<br />
+          <strong>Chargeable Weight:</strong> {{chargeableWeight}} kg
+        </td>
+      </tr>
+    </table>
+
+    <!-- BREAKDOWN -->
+    <h2>Quote Breakdown</h2>
+    <table class="breakdown-table">
+      <colgroup>
+        <col style="width: 70%;">
+        <col style="width: 30%;">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th class="cost-col">Cost (PGK)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{lineItems}}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td class="totals-label">Sub-Total:</td>
+          <td class="cost-col">{{subTotal}}</td>
+        </tr>
+        <tr>
+          <td class="totals-label">GST (10%):</td>
+          <td class="cost-col">{{gst}}</td>
+        </tr>
+        <tr class="grand-total">
+          <td class="totals-label">Grand Total:</td>
+          <td class="cost-col">PGK {{grandTotal}}</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <p>Thank you for your business! This quote is valid for 30 days.</p>
+      <p>All business is conducted under our standard trading conditions.</p>
+    </div>
+  </div>
+</body>
+</html>
