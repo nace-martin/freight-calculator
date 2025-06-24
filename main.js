@@ -111,18 +111,12 @@ function setupEventListeners(elements) {
 
     if (elements.downloadPdfBtn) {
         elements.downloadPdfBtn.addEventListener('click', () => {
-            const headerToPrint = document.querySelector('.app-header');
+            const headerToPrint = document.querySelector('.app-header'); // Corrected selector
             const quoteToPrint = document.getElementById('quote-output');
-
-            // Add a robust check to ensure both elements exist before proceeding.
-            if (!headerToPrint || !quoteToPrint || quoteToPrint.innerHTML.trim() === "") {
-                console.error("PDF Generation Error: Could not find the header or quote content to print.");
-                alert("Cannot generate PDF. The quote content is missing or the page structure is incorrect.");
-                return;
-            }
+            if (quoteToPrint.innerHTML.trim() === "") return;
 
             const printableArea = document.createElement('div');
-            printableArea.appendChild(headerToPrint.cloneNode(true)); // This line was causing the error
+            printableArea.appendChild(headerToPrint.cloneNode(true));
             printableArea.appendChild(quoteToPrint.cloneNode(true));
 
             const opt = {
@@ -132,7 +126,6 @@ function setupEventListeners(elements) {
                 html2canvas: { scale: 2, useCORS: true },
                 jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
             };
-            // FIX: Changed html2pdf to window.html2pdf for module compatibility
             if (typeof window.html2pdf === 'function') {
                 window.html2pdf().set(opt).from(printableArea).save();
             } else {
@@ -238,14 +231,6 @@ onAuthStateChanged(auth, user => {
     } else {
         initializeApp();
     }
-    // NEW: If a logged-in user lands on index.html (the calculator page),
-    // redirect them to the dashboard. They can navigate back to index.html from the dashboard.
-    // Ensure this redirection only happens once to avoid loops.
-    if (window.location.pathname.endsWith('index.html') && !window.sessionStorage.getItem('redirectedToDashboard')) {
-        window.sessionStorage.setItem('redirectedToDashboard', 'true'); // Set a flag to prevent immediate re-redirection
-        window.location.href = 'dashboard.html'; // ADD THIS LINE
-    }
-
   } else {
     // User is signed out. Redirect to login.
     window.location.href = 'login.html';
