@@ -184,8 +184,11 @@ onAuthStateChanged(auth, user => {
 });
 
 // --- Injecting Styles for the new dashboard features ---
-const style = document.createElement('style');
-style.textContent = `
+// Prevent duplicate style injection
+if (!document.getElementById('dashboard-styles')) {
+  const style = document.createElement('style');
+  style.id = 'dashboard-styles';
+  style.textContent = `
     .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5em; flex-wrap: wrap; gap: 1em;}
     .dashboard-controls { display: flex; gap: 1em; }
     #search-input { padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.9em; width: 250px; }
@@ -212,5 +215,6 @@ style.textContent = `
     .modal-totals { margin-top: 15px; padding-top: 15px; border-top: 1px solid #dee2e6; }
     .modal-totals p { display: flex; justify-content: space-between; margin: 5px 0; }
     .modal-totals .grand-total { font-weight: bold; font-size: 1.1rem; }
-`;
-document.head.appendChild(style);
+  `;
+  document.head.appendChild(style);
+}

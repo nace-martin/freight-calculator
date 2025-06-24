@@ -172,8 +172,9 @@ export function generateQuote(elements, freightRates) {
     // 2. Ancillary Charges (excluding PUD-related fees)
     ancillaryCharges.forEach(charge => {
         // *** THE FIX IS HERE: We skip PUD charges in this generic loop ***
-        if (charge.name.includes('PUD') || charge.dependsOn === 'PUD Fee') {
-            return; 
+        // Use exact match or regex for 'PUD' to avoid false positives
+        if (charge.name === 'PUD' || charge.name === 'PUD Fee' || charge.dependsOn === 'PUD Fee') {
+            return;
         }
 
         if (charge.type === 'Per-Shipment') {
