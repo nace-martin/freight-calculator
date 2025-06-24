@@ -3,72 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RateEngine - Dashboard</title> 
+    <title>RateEngine - Domestic Air Freight Calculator</title> 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
     <header class="app-header">
         <nav class="navbar">
             <div class="navbar-left-section">
-                <img src="https://expressfreight.com/wp-content/themes/efm-veribo/assets/img/logo.svg" alt="Express Freight Management Logo">
-                <h2 id="app-nav-title"></h2> 
+                <img src="./assets/New Logo 2023.png" alt="Express Freight Management Logo">
+                <h2 id="app-nav-title"></h2>
             </div>
             <ul class="navbar-links">
                 <li><a href="dashboard.html">Dashboard</a></li>
-                <li><a href="index.html">New Quote</a></li>
-                <li><a href="#">My Quotes</a></li>
-            </ul>
+                <li><a href="index.html">New Quote</a></li> <li><a href="#">My Quotes</a></li> </ul>
             <button id="nav-logout-btn" class="btn-remove" style="padding: 8px 12px;">Logout</button>
         </nav>
     </header>
 
-    <div class="container"> 
+    <div class="container">
         <div id="loading-spinner" class="spinner-container" style="display: none;">
             <div class="spinner"></div>
         </div>
 
-        <div class="content-area"> 
-            <h2>Dashboard Overview</h2>
-            <p>This is your personalized dashboard. From here, you can access various tools and features.</p>
-            <p>Click the link below to access the Domestic Air Freight Calculator:</p>
-            <p><a href="index.html" class="btn-generate">Go to Calculator</a></p>
+        <div id="calculator-form">
+            <div class="form-section">
+                <h2>Routing</h2>
+                <div class="form-group"><label for="origin">Origin</label><select id="origin" name="origin"></select></div>
+                <div class="form-group"><label for="destination">Destination</label><select id="destination" name="destination"></select></div>
+            </div>
+            <div class="form-section">
+                <h2>Shipment Details</h2>
+                <div id="pieces-container">
+                    <template id="piece-row-template">
+                        <div class="piece-row">
+                            <input type="number" class="weight" placeholder="Wt (kg)">
+                            <input type="number" class="length" placeholder="L (cm)">
+                            <input type="number" class="width" placeholder="W (cm)">
+                            <input type="number" class="height" placeholder="H (cm)">
+                            <button type="button" class="btn-remove">X</button>
+                        </div>
+                    </template>
+                    <div class="piece-row">
+                        <input type="number" class="weight" placeholder="Wt (kg)"><input type="number" class="length" placeholder="L (cm)"><input type="number" class="width" placeholder="W (cm)"><input type="number" class="height" placeholder="H (cm)">
+                        <button type="button" class="btn-remove" style="visibility: hidden;">X</button>
+                    </div>
+                </div>
+                <button type="button" id="add-piece-btn" class="btn-add">+ Add Piece</button>
+            </div>
+            <div class="form-group">
+                <label>Total Chargeable Weight</label>
+                <p style="font-size: 1.5em; font-weight: bold;"><strong id="chargeableWeightDisplay">0</strong> kg</p>
+            </div>
         </div>
 
-    </div> <script type="module" src="firebase-config.js"></script>
-    <script type="module">
-        // Basic auth guard for dashboard.html
-        import { auth } from './firebase-config.js';
-        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        <div class="action-buttons">
+            <button type="button" id="generate-quote-btn" class="btn-generate">Generate Quote</button>
+            <button type="button" id="reset-btn" class="btn-reset">Reset</button>
+            <button type="button" id="download-pdf-btn" class="btn-generate" style="display: none;">Download PDF</button>
+            <button type="button" id="save-quote-btn" class="btn-generate" style="display: none;">Save Quote</button>
+        </div>
+        <div id="quote-output"></div>
 
-        onAuthStateChanged(auth, user => {
-            if (!user) {
-                // If user is not logged in, redirect to login page
-                window.location.href = 'login.html';
-            } else {
-                console.log("User logged in on dashboard.");
-                // Set the specific title for this page's navigation bar
-                const navTitleElement = document.getElementById('app-nav-title');
-                if (navTitleElement) {
-                    navTitleElement.textContent = 'RateEngine - Dashboard'; 
-                }
-
-                // Set up the logout button listener for the dashboard page.
-                const logoutBtn = document.getElementById('nav-logout-btn'); 
-                if (logoutBtn) {
-                    logoutBtn.addEventListener('click', () => {
-                        auth.signOut().then(() => {
-                            console.log('User signed out successfully from dashboard.');
-                        }).catch((error) => {
-                            console.error('Sign out error from dashboard:', error);
-                            alert("Error signing out. Please try again.");
-                        });
-                    });
-                }
-            }
-        });
+    </div> <script>
+        console.log("Inline script executed!");
     </script>
+    <script type="module" src="main.js"></script>
 </body>
 </html>

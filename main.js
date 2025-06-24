@@ -111,12 +111,18 @@ function setupEventListeners(elements) {
 
     if (elements.downloadPdfBtn) {
         elements.downloadPdfBtn.addEventListener('click', () => {
-            const headerToPrint = document.querySelector('.header');
+            const headerToPrint = document.querySelector('.app-header');
             const quoteToPrint = document.getElementById('quote-output');
-            if (quoteToPrint.innerHTML.trim() === "") return;
+
+            // Add a robust check to ensure both elements exist before proceeding.
+            if (!headerToPrint || !quoteToPrint || quoteToPrint.innerHTML.trim() === "") {
+                console.error("PDF Generation Error: Could not find the header or quote content to print.");
+                alert("Cannot generate PDF. The quote content is missing or the page structure is incorrect.");
+                return;
+            }
 
             const printableArea = document.createElement('div');
-            printableArea.appendChild(headerToPrint.cloneNode(true));
+            printableArea.appendChild(headerToPrint.cloneNode(true)); // This line was causing the error
             printableArea.appendChild(quoteToPrint.cloneNode(true));
 
             const opt = {
@@ -126,8 +132,9 @@ function setupEventListeners(elements) {
                 html2canvas: { scale: 2, useCORS: true },
                 jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
             };
-            if (typeof html2pdf !== 'undefined') {
-                html2pdf().set(opt).from(printableArea).save();
+            // FIX: Changed html2pdf to window.html2pdf for module compatibility
+            if (typeof window.html2pdf === 'function') {
+                window.html2pdf().set(opt).from(printableArea).save();
             } else {
                 console.error("html2pdf library not found. Make sure it's loaded before main.js.");
                 alert("PDF download not available. Please try again or contact support.");

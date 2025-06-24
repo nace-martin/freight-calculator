@@ -42,7 +42,7 @@ body {
     color: white;
     flex-wrap: wrap; /* Allow items to wrap on smaller screens if necessary */
     gap: 1.5em; /* Increased gap between main flex items for spaciousness */
-    padding: 0 2em; /* Apply HORIZONTAL padding here to push content from screen edges */
+    padding: 0 1em; /* Changed from 1.5em to 1em for closer alignment */
     border-radius: 0; /* Remove border-radius if the bar is edge-to-edge */
 }
 
@@ -54,12 +54,12 @@ body {
 }
 
 .navbar-left-section img {
-    height: 40px; /* Slightly larger logo within the nav bar */
+    height: 60px; /* Changed from 40px to 60px for better visibility */
     vertical-align: middle;
 }
 
 .navbar-left-section h2 {
-    font-size: 1.4em; /* Slightly larger title within the nav bar */
+    font-size: 1.6em; /* Slightly larger title within the nav bar, from 1.4em */
     color: white;
     margin: 0;
     border-bottom: none;
