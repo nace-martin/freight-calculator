@@ -110,72 +110,63 @@ function setupEventListeners(elements) {
     }
 
 
-if (elements.downloadPdfBtn) {
-        // Make the event listener async to use await for fetching the template
+    if (elements.downloadPdfBtn) {
         elements.downloadPdfBtn.addEventListener('click', async () => {
             if (!state.currentQuoteData) {
                 alert("Cannot generate PDF. No quote data available.");
                 return;
             }
 
+            // Show a loading indicator to the user
+            elements.downloadPdfBtn.disabled = true;
+            elements.downloadPdfBtn.textContent = 'Generating...';
+
             try {
-                // 1. Fetch the HTML template content
-                const response = await fetch('quote-template.html');
-                if (!response.ok) throw new Error('Quote template not found.');
-                let templateHtml = await response.text();
+                // IMPORTANT: You will replace this placeholder URL in Part 2, Step 5.
+                const pdfGeneratorUrl = 'https://generatequotepdf-dbmt2pal4q-ts.a.run.app'; 
 
-                // 2. Prepare the data
-                const quote = state.currentQuoteData;
-                const quoteDate = new Date(quote.quoteGeneratedAt).toLocaleDateString('en-AU');
-                
-                // Create HTML for line items
-                const lineItemsHtml = quote.lineItems
-                    .map(item => `<tr><td>${item.name}</td><td class="line-item-cost">${formatCurrency(item.cost)}</td></tr>`)
-                    .join('');
+                const response = await fetch(pdfGeneratorUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(state.currentQuoteData),
+                });
 
-                // 3. Replace placeholders in the template with actual data
-                templateHtml = templateHtml
-                    .replace('{{clientName}}', 'Valued Client') // Placeholder for now
-                    .replace('{{clientAddress}}', '') // Placeholder for now
-                    .replace('{{clientContact}}', '') // Placeholder for now
-                    .replace('{{quoteDate}}', quoteDate)
-                    .replace('{{quoteId}}', `Q-${Date.now()}`) // Generate a simple unique ID
-                    .replace('{{origin}}', quote.origin)
-                    .replace('{{destination}}', quote.destination)
-                    .replace('{{chargeableWeight}}', quote.chargeableWeight)
-                    .replace('{{lineItems}}', lineItemsHtml)
-                    .replace('{{subTotal}}', formatCurrency(quote.subTotal))
-                    .replace('{{gst}}', formatCurrency(quote.gst))
-                    .replace('{{grandTotal}}', formatCurrency(quote.grandTotal));
-
-                // 4. Configure and run html2pdf on the populated template
-                const opt = {
-                    margin: 0.5,
-                    filename: `EFM_Quote_${Date.now()}.pdf`,
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true },
-                    jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-                };
-
-                if (typeof window.html2pdf === 'function') {
-                    // We are creating a new element to avoid affecting the main page
-                    const printableArea = document.createElement('div');
-                    printableArea.innerHTML = templateHtml;
-                    window.html2pdf().set(opt).from(printableArea).save();
-                } else {
-                    console.error("html2pdf library not found.");
-                    alert("PDF download not available.");
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Server responded with an error: ${response.status} ${errorText}`);
                 }
+
+                // The response is the PDF file itself. We read it as a blob.
+                const pdfBlob = await response.blob();
+
+                // Create a temporary URL for the blob and trigger a download.
+                const url = window.URL.createObjectURL(pdfBlob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `EFM_Quote_${Date.now()}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
 
             } catch (error) {
                 console.error("PDF Generation Error:", error);
-                alert("Could not generate PDF. Please see the console for details.");
+                alert("Could not generate the PDF. Please check the console for details.");
+            } finally {
+                // Re-enable the button
+                elements.downloadPdfBtn.disabled = false;
+                elements.downloadPdfBtn.textContent = 'Download PDF';
             }
         });
-        console.log("Listener attached: downloadPdfBtn");
+        console.log("Listener attached for server-side PDF generation.");
     } else {
         console.error("CRITICAL ERROR: downloadPdfBtn is null. Cannot attach listener.");
     }
+
+    
     if (elements.logoutBtn) {
         elements.logoutBtn.addEventListener('click', () => {
             auth.signOut().then(() => {

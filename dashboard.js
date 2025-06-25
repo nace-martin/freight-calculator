@@ -75,7 +75,6 @@ function populateAndShowModal(quoteId) {
     modal.style.display = 'flex'; // Show the modal
 }
 
-
 function setupModal() {
     const modal = document.getElementById('quote-modal');
     const closeBtn = document.querySelector('.modal-close-btn');
@@ -184,11 +183,8 @@ onAuthStateChanged(auth, user => {
 });
 
 // --- Injecting Styles for the new dashboard features ---
-// Prevent duplicate style injection
-if (!document.getElementById('dashboard-styles')) {
-  const style = document.createElement('style');
-  style.id = 'dashboard-styles';
-  style.textContent = `
+const style = document.createElement('style');
+style.textContent = `
     .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5em; flex-wrap: wrap; gap: 1em;}
     .dashboard-controls { display: flex; gap: 1em; }
     #search-input { padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.9em; width: 250px; }
@@ -203,18 +199,45 @@ if (!document.getElementById('dashboard-styles')) {
 
     /* Modal Styles */
     .modal-overlay { position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;}
-    .modal-content { background-color: #fff; margin: auto; padding: 20px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); width: 90%; max-width: 600px; }
+    .modal-content { background-color: #fff; margin: auto; padding: 20px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); width: 90%; max-width: 700px; /* Increased max-width */ }
     .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #dee2e6; padding-bottom: 10px; margin-bottom: 15px; }
     .modal-header h2 { margin: 0; font-size: 1.25rem; }
     .modal-close-btn { color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; }
     .modal-close-btn:hover, .modal-close-btn:focus { color: #000; }
     .modal-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; margin-bottom: 15px; }
     .modal-info-grid p { margin: 0; }
-    .modal-line-items { list-style: none; padding: 0; margin: 0; }
-    .modal-line-items li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f1f1; }
-    .modal-totals { margin-top: 15px; padding-top: 15px; border-top: 1px solid #dee2e6; }
-    .modal-totals p { display: flex; justify-content: space-between; margin: 5px 0; }
-    .modal-totals .grand-total { font-weight: bold; font-size: 1.1rem; }
-  `;
-  document.head.appendChild(style);
-}
+
+    /* --- THE FIX IS HERE: New styles for the breakdown table inside the modal --- */
+    .modal-breakdown-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1em;
+        font-size: 0.9em;
+    }
+    .modal-breakdown-table th, .modal-breakdown-table td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .modal-breakdown-table thead {
+        background-color: #f8f9fa;
+    }
+    .modal-breakdown-table th {
+        font-weight: 600;
+    }
+    .modal-breakdown-table tfoot td {
+        font-weight: bold;
+        border-top: 2px solid #343a40;
+        padding-top: 10px;
+    }
+    /* Right-align all numerical columns */
+    .modal-breakdown-table th:not(:first-child),
+    .modal-breakdown-table td:not(:first-child) {
+        text-align: right;
+    }
+    /* Special alignment for the "Totals" label in the footer */
+    .modal-breakdown-table tfoot td[colspan="2"] {
+        text-align: right;
+    }
+`;
+document.head.appendChild(style);
