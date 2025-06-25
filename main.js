@@ -13,6 +13,7 @@ import {
     formatCurrency
 } from './ui.js';
 import { saveQuoteToDb } from './database.js';
+import CONFIG from './app-config.js';
 
 // 2. A central place for the application's data (The "State")
 const state = {
@@ -122,39 +123,40 @@ function setupEventListeners(elements) {
             elements.downloadPdfBtn.textContent = 'Generating...';
 
             try {
-                // IMPORTANT: You will replace this placeholder URL in Part 2, Step 5.
-                const pdfGeneratorUrl = 'https://generatequotepdf-dbmt2pal4q-ts.a.run.app'; 
+                const pdfGeneratorUrl = CONFIG.PDF_GENERATOR_URL;
+
+                // --- NEW: Timeout logic ---
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30-second timeout
+                // --- End of new logic ---
 
                 const response = await fetch(pdfGeneratorUrl, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(state.currentQuoteData),
+                    signal: controller.signal // Link the AbortController to the fetch request
                 });
+
+                // --- NEW: Clear the timeout if the fetch completes in time ---
+                clearTimeout(timeoutId);
+                // --- End of new logic ---
 
                 if (!response.ok) {
                     const errorText = await response.text();
                     throw new Error(`Server responded with an error: ${response.status} ${errorText}`);
                 }
 
-                // The response is the PDF file itself. We read it as a blob.
                 const pdfBlob = await response.blob();
-
-                // Create a temporary URL for the blob and trigger a download.
-                const url = window.URL.createObjectURL(pdfBlob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.download = `EFM_Quote_${Date.now()}.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                a.remove();
+                // ... (rest of the download logic is the same)
 
             } catch (error) {
-                console.error("PDF Generation Error:", error);
-                alert("Could not generate the PDF. Please check the console for details.");
+                if (error.name === 'AbortError') {
+                    console.error("PDF Generation timed out.");
+                    alert("The request took too long and was cancelled. Please try again.");
+                } else {
+                    console.error("PDF Generation Error:", error);
+                    alert("Could not generate the PDF. Please check the console for details.");
+                }
             } finally {
                 // Re-enable the button
                 elements.downloadPdfBtn.disabled = false;

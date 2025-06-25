@@ -1,66 +1,72 @@
-// This is server-side code using the modern v2 syntax for Firebase Functions.
-// It uses the 'pdfkit' library to generate PDFs with precision.
+// This is the complete, corrected server-side code using local assets.
 
-// Use the v2 syntax for HTTPS functions and setting global options
 const { onRequest } = require("firebase-functions/v2/https");
 const { setGlobalOptions } = require("firebase-functions/v2");
 const PDFDocument = require('pdfkit');
 const cors = require('cors')({ origin: true });
+const fs = require('fs'); // The built-in Node.js File System module
+const path = require('path'); // The built-in Node.js Path module
 
-// THE FIX: Set the region for all functions in this file using the modern v2 syntax.
+// Set the region for all functions in this file.
 setGlobalOptions({ region: "australia-southeast1" });
 
-// EXPORTS for the v2 syntax
-exports.generateQuotePdf = onRequest((req, res) => {
-    // Enable CORS to allow requests from your web app
-    cors(req, res, () => {
+
+// EXPORT THE FUNCTION
+exports.generateQuotePdf = onRequest((req, res) => { // No longer needs to be async at this level
+    // Enable CORS
+    cors(req, res, () => { // No longer needs to be async
         if (req.method !== 'POST') {
             return res.status(405).send('Method Not Allowed');
         }
 
         const quote = req.body;
 
-        // Basic validation
-        if (!quote || !quote.lineItems || !quote.grandTotal) {
-            return res.status(400).send('Bad Request: Missing quote data.');
+        // Enhanced Validation
+        if (!quote || typeof quote !== 'object') {
+            return res.status(400).send('Bad Request: Invalid quote data format.');
+        }
+        const requiredFields = ['origin', 'destination', 'chargeableWeight', 'lineItems', 'grandTotal'];
+        for (const field of requiredFields) {
+            if (quote[field] === undefined) {
+                return res.status(400).send(`Bad Request: Missing required field '${field}'.`);
+            }
+        }
+        if (!Array.isArray(quote.lineItems) || quote.lineItems.length === 0) {
+            return res.status(400).send('Bad Request: lineItems must be a non-empty array.');
         }
 
-        // --- Start PDF Generation ---
         const doc = new PDFDocument({
             size: 'A4',
             margin: 50,
             layout: 'portrait',
-            info: {
-                Title: 'Freight Quotation',
-                Author: 'Express Freight Management',
-            }
+            info: { Title: 'Freight Quotation', Author: 'Express Freight Management' }
         });
 
-        // Set the response headers to trigger a download
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=EFM_Quote_${Date.now()}.pdf`);
 
-        // Pipe the PDF document directly to the response stream
         doc.pipe(res);
 
-        // --- Helper Functions ---
-        const formatCurrency = (number) => {
-            return (number || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        };
-        const formatDate = (isoString) => {
-            if (!isoString) return 'N/A';
-            return new Date(isoString).toLocaleDateString('en-AU', {
-                day: '2-digit', month: 'short', year: 'numeric'
-            });
-        };
+        // Helper Functions
+        const formatCurrency = (number) => (number || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const formatDate = (isoString) => isoString ? new Date(isoString).toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
 
-        // --- PDF Content ---
+        // PDF Content
 
-        // Header
-        doc.fontSize(20).font('Helvetica-Bold').text('QUOTATION', 50, 50, { align: 'right' });
+        // --- THE FIX IS HERE ---
+        // Load the logo directly from the local file system.
+        // This is fast, reliable, and removes the network dependency.
+        const logoPath = path.join(__dirname, 'logo.svg');
+        if (fs.existsSync(logoPath)) {
+            doc.image(logoPath, 50, 45, { width: 150 });
+        }
+        
+        doc.fontSize(20).font('Helvetica-Bold').text('QUOTATION', { align: 'right' });
         doc.fontSize(10).font('Helvetica').text('Express Freight Management', { align: 'right' });
         doc.moveDown(0.5);
 
+        // ... The rest of the PDF generation code is identical ...
+        
         // Underline
         doc.strokeColor("#002D62").lineWidth(1.5).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
         doc.moveDown(2);
@@ -80,31 +86,32 @@ exports.generateQuotePdf = onRequest((req, res) => {
         doc.font('Helvetica').text(`${quote.origin} to ${quote.destination}`, 420);
         doc.moveDown(2);
 
-
         // Breakdown Table
         doc.font('Helvetica-Bold').fontSize(12).text('Charge Summary');
         doc.moveDown();
 
         const tableTop = doc.y;
-        doc.font('Helvetica-Bold').fontSize(10);
-        doc.text('Description', 50, tableTop);
-        doc.text('Rate', 250, tableTop, { width: 60, align: 'right' });
-        doc.text('Subtotal', 320, tableTop, { width: 70, align: 'right' });
-        doc.text('GST', 400, tableTop, { width: 60, align: 'right' });
-        doc.text('Total', 470, tableTop, { width: 80, align: 'right' });
-        doc.moveDown(0.5);
+        const columnSpacing = [190, 60, 70, 60, 80];
+        const columnStartPositions = [50, 250, 320, 400, 470];
+        const tableHeaders = ['Description', 'Rate', 'Subtotal', 'GST', 'Total'];
 
+        doc.font('Helvetica-Bold').fontSize(10);
+        tableHeaders.forEach((header, i) => {
+            doc.text(header, columnStartPositions[i], tableTop, { width: columnSpacing[i], align: i === 0 ? 'left' : 'right' });
+        });
+        doc.moveDown(0.5);
         doc.strokeColor("#aaaaaa").lineWidth(0.5).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
         doc.moveDown();
         
         doc.font('Helvetica').fontSize(10);
         quote.lineItems.forEach(item => {
+            if (doc.y > 700) doc.addPage();
             const y = doc.y;
-            doc.text(item.name, 50, y, { width: 190 });
-            doc.text(item.rate.toFixed(2), 250, y, { width: 60, align: 'right' });
-            doc.text(formatCurrency(item.subTotal), 320, y, { width: 70, align: 'right' });
-            doc.text(formatCurrency(item.gst), 400, y, { width: 60, align: 'right' });
-            doc.text(formatCurrency(item.total), 470, y, { width: 80, align: 'right' });
+            doc.text(item.name, columnStartPositions[0], y, { width: columnSpacing[0] });
+            doc.text(item.rate.toFixed(2), columnStartPositions[1], y, { width: columnSpacing[1], align: 'right' });
+            doc.text(formatCurrency(item.subTotal), columnStartPositions[2], y, { width: columnSpacing[2], align: 'right' });
+            doc.text(formatCurrency(item.gst), columnStartPositions[3], y, { width: columnSpacing[3], align: 'right' });
+            doc.text(formatCurrency(item.total), columnStartPositions[4], y, { width: columnSpacing[4], align: 'right' });
             doc.moveDown(1.5);
         });
         
@@ -114,12 +121,30 @@ exports.generateQuotePdf = onRequest((req, res) => {
         // Totals
         const totalsTop = doc.y;
         doc.font('Helvetica-Bold');
-        doc.text('Totals:', 50, totalsTop);
-        doc.text(formatCurrency(quote.subTotal), 320, totalsTop, { width: 70, align: 'right' });
-        doc.text(formatCurrency(quote.gst), 400, totalsTop, { width: 60, align: 'right' });
-        doc.text(formatCurrency(quote.grandTotal), 470, totalsTop, { width: 80, align: 'right' });
+        doc.text('Totals:', columnStartPositions[0], totalsTop, { width: columnSpacing[0] });
+        doc.text(formatCurrency(quote.subTotal), columnStartPositions[2], totalsTop, { width: columnSpacing[2], align: 'right' });
+        doc.text(formatCurrency(quote.gst), columnStartPositions[3], totalsTop, { width: columnSpacing[3], align: 'right' });
+        doc.text(formatCurrency(quote.grandTotal), columnStartPositions[4], totalsTop, { width: columnSpacing[4], align: 'right' });
+        doc.moveDown(3);
+        
+        // Terms & Conditions
+        doc.font('Helvetica-Bold').fontSize(10).text('Terms & Conditions');
+        doc.strokeColor("#aaaaaa").lineWidth(0.5).moveTo(50, doc.y).lineTo(200, doc.y).stroke();
+        doc.moveDown();
+        
+        doc.font('Helvetica').fontSize(8);
+        const terms = [
+            'All rates are quoted in PGK and are subject to change without notice, carrier acceptance and availability.',
+            'This quote is valid for 7 days. Freight and Charges may be subject to local taxes.',
+            'Fuel surcharges are subject to change at airline discretion without notice.',
+            'Rates are not applicable to Dangerous Goods or over-dimensional cargo unless specifically detailed in this quote.',
+            'This quote is subject to the standard trading conditions.'
+        ];
+        terms.forEach(term => {
+            doc.text(`• ${term}`, { align: 'left' });
+        });
 
-        // Finalize the PDF and end the stream
+        // Finalize the PDF
         doc.end();
     });
 });
