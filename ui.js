@@ -108,7 +108,110 @@ export function resetApp(elements) {
 
     elements.originSelect.selectedIndex = 0;
     elements.destinationSelect.selectedIndex = 0;
+
+    // Also clear customer selection
+    clearCustomerSelection(elements);
 }
+
+// --- Customer UI Functions ---
+
+export function populateCustomerDropdown(elements, customers) {
+    const select = elements.customerSelect;
+    if (!select) {
+        console.warn("Customer select dropdown not found in elements.");
+        return;
+    }
+    // Store existing value to try and reselect if it's in the new list
+    const existingValue = select.value;
+    select.innerHTML = '<option value="">-- Select Existing Customer --</option>'; // Reset
+    customers.forEach(customer => {
+        const option = document.createElement('option');
+        option.value = customer.id;
+        option.textContent = `${customer.name} ${customer.companyName ? '(' + customer.companyName + ')' : ''}`;
+        select.appendChild(option);
+    });
+    // Try to reselect previous value
+    if (customers.find(c => c.id === existingValue)) {
+        select.value = existingValue;
+    }
+}
+
+export function displaySelectedCustomerDetails(elements, customer) {
+    const detailsDiv = elements.selectedCustomerDetails;
+    if (!detailsDiv) {
+        console.warn("Selected customer details div not found in elements.");
+        return;
+    }
+    if (customer) {
+        detailsDiv.innerHTML = `
+            <p><strong>Selected:</strong> ${customer.name}</p>
+            ${customer.companyName ? `<p><strong>Company:</strong> ${customer.companyName}</p>` : ''}
+            ${customer.email ? `<p><strong>Email:</strong> ${customer.email}</p>` : ''}
+            ${customer.phone ? `<p><strong>Phone:</strong> ${customer.phone}</p>` : ''}
+            ${customer.address ? `<p><strong>Address:</strong> ${customer.address.replace(/\n/g, '<br>')}</p>` : ''}
+        `;
+        detailsDiv.style.display = 'block';
+    } else {
+        detailsDiv.innerHTML = '';
+        detailsDiv.style.display = 'none';
+    }
+}
+
+export function openCustomerModal(elements, customerData = null) {
+    const modal = elements.customerModal;
+    const title = elements.customerModalTitle;
+    const idInput = elements.customerIdInput;
+    const nameInput = elements.customerNameInput;
+    const companyInput = elements.customerCompanyInput;
+    const emailInput = elements.customerEmailInput;
+    const phoneInput = elements.customerPhoneInput;
+    const addressInput = elements.customerAddressInput;
+
+    if (!modal || !title || !idInput || !nameInput || !companyInput || !emailInput || !phoneInput || !addressInput) {
+        console.error("One or more customer modal elements are missing.");
+        return;
+    }
+
+    // Reset form
+    idInput.value = '';
+    nameInput.value = '';
+    companyInput.value = '';
+    emailInput.value = '';
+    phoneInput.value = '';
+    addressInput.value = '';
+
+    if (customerData) { // Editing existing customer
+        title.textContent = 'Edit Customer';
+        idInput.value = customerData.id;
+        nameInput.value = customerData.name || '';
+        companyInput.value = customerData.companyName || '';
+        emailInput.value = customerData.email || '';
+        phoneInput.value = customerData.phone || '';
+        addressInput.value = customerData.address || '';
+    } else { // Adding new customer
+        title.textContent = 'Add New Customer';
+    }
+    modal.style.display = 'flex';
+}
+
+export function closeCustomerModal(elements) {
+    const modal = elements.customerModal;
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+export function clearCustomerSelection(elements) {
+    if (elements.customerSelect) {
+        elements.customerSelect.value = "";
+    }
+    if (elements.selectedCustomerDetails) {
+        elements.selectedCustomerDetails.innerHTML = '';
+        elements.selectedCustomerDetails.style.display = 'none';
+    }
+}
+
+
 // --- Data & Calculation Functions ---
 
 export function getChargeableWeight(elements) {
@@ -210,6 +313,34 @@ export function generateQuote(elements, freightRates) {
     const grandTotalGst = lineItems.reduce((sum, item) => sum + item.gst, 0);
     const grandTotal = lineItems.reduce((sum, item) => sum + item.total, 0);
 
+    // --- Customer Data Integration ---
+    let customerId = null;
+    let customerName = ''; // For display on quote list
+    let clientName = 'Valued Customer'; // For PDF: {{clientName}}
+    let clientAddress = ''; // For PDF: {{clientAddress}}
+    let clientContact = ''; // For PDF: {{clientContact}} (could be email or phone)
+
+    const selectedCustomerId = elements.customerSelect ? elements.customerSelect.value : null;
+
+    if (selectedCustomerId && elements.customers && elements.customers.length > 0) {
+        const selectedCustomer = elements.customers.find(c => c.id === selectedCustomerId);
+        if (selectedCustomer) {
+            customerId = selectedCustomer.id;
+            // For quote list display: use name, fallback to companyName if name is empty
+            customerName = selectedCustomer.name || selectedCustomer.companyName || '';
+            clientName = selectedCustomer.name;   // For PDF, will be augmented below
+            clientAddress = selectedCustomer.address || '';
+            clientContact = selectedCustomer.email || selectedCustomer.phone || '';
+            // If company name exists and clientName is just person's name, append company.
+            if (selectedCustomer.companyName && selectedCustomer.name !== selectedCustomer.companyName) {
+                clientName += ` (${selectedCustomer.companyName})`;
+            } else if (!selectedCustomer.name && selectedCustomer.companyName) {
+                clientName = selectedCustomer.companyName; // If only company name is there
+            }
+        }
+    }
+    // --- End Customer Data Integration ---
+
     const quoteData = {
         origin,
         destination,
@@ -218,7 +349,13 @@ export function generateQuote(elements, freightRates) {
         subTotal: grandTotalSubTotal,
         gst: grandTotalGst,
         grandTotal: grandTotal,
-        quoteGeneratedAt: new Date().toISOString()
+        quoteGeneratedAt: new Date().toISOString(),
+        // Customer related fields
+        customerId,
+        customerName, // For quick display in quote lists
+        clientName,   // For PDF
+        clientAddress,// For PDF
+        clientContact // For PDF
     };
     
     renderQuoteHTML(elements, quoteData);
