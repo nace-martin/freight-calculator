@@ -35,41 +35,55 @@ exports.generateQuotePdf = onRequest((req, res) => { // No longer needs to be as
             return res.status(400).send('Bad Request: lineItems must be a non-empty array.');
         }
 
+        console.log('[generateQuotePdf] Function started.');
         const doc = new PDFDocument({
             size: 'A4',
             margin: 50,
             layout: 'portrait',
             info: { Title: 'Freight Quotation', Author: 'Express Freight Management' }
         });
+        console.log('[generateQuotePdf] PDFDocument instantiated.');
 
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=EFM_Quote_${Date.now()}.pdf`);
+        console.log('[generateQuotePdf] Headers set.');
 
         doc.pipe(res);
+        console.log('[generateQuotePdf] PDF piped to response.');
 
         // Helper Functions
         const formatCurrency = (number) => (number || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const formatDate = (isoString) => isoString ? new Date(isoString).toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
 
+        console.log('[generateQuotePdf] Starting PDF content generation.');
         // PDF Content
 
         // --- THE FIX IS HERE ---
         // Load the logo directly from the local file system.
         // This is fast, reliable, and removes the network dependency.
-        const logoPath = path.join(__dirname, 'logo.svg');
+        const logoPath = path.join(__dirname, 'logo.png'); // Changed to logo.png
+        console.log(`[generateQuotePdf] Logo path: ${logoPath}`);
         if (fs.existsSync(logoPath)) {
-            doc.image(logoPath, 50, 45, { width: 150 });
+            console.log('[generateQuotePdf] Logo PNG file exists. Attempting to add to PDF.');
+            // Adjusted Y position slightly to align better with top margin if 45 was too high.
+            // X position 50 should align with the left margin.
+            doc.image(logoPath, 50, 50, { width: 150 }); 
+            console.log('[generateQuotePdf] Logo PNG image added to PDF.');
+        } else {
+            console.log('[generateQuotePdf] Logo PNG file NOT found. Make sure logo.png is in the functions directory.');
         }
         
         doc.fontSize(20).font('Helvetica-Bold').text('QUOTATION', { align: 'right' });
         doc.fontSize(10).font('Helvetica').text('Express Freight Management', { align: 'right' });
         doc.moveDown(0.5);
+        console.log('[generateQuotePdf] Header texts added.');
 
         // ... The rest of the PDF generation code is identical ...
         
         // Underline
         doc.strokeColor("#002D62").lineWidth(1.5).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
         doc.moveDown(2);
+        console.log('[generateQuotePdf] Finished main headers, starting quote info section.');
 
         // Quote Info
         const infoTop = doc.y;
@@ -85,6 +99,7 @@ exports.generateQuotePdf = onRequest((req, res) => { // No longer needs to be as
         doc.font('Helvetica-Bold').text('Route:', 320);
         doc.font('Helvetica').text(`${quote.origin} to ${quote.destination}`, 420);
         doc.moveDown(2);
+        console.log('[generateQuotePdf] Finished quote info section, starting breakdown table.');
 
         // Breakdown Table
         doc.font('Helvetica-Bold').fontSize(12).text('Charge Summary');
@@ -102,10 +117,15 @@ exports.generateQuotePdf = onRequest((req, res) => { // No longer needs to be as
         doc.moveDown(0.5);
         doc.strokeColor("#aaaaaa").lineWidth(0.5).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
         doc.moveDown();
+        console.log('[generateQuotePdf] Breakdown table headers added. Starting line items.');
         
         doc.font('Helvetica').fontSize(10);
-        quote.lineItems.forEach(item => {
-            if (doc.y > 700) doc.addPage();
+        quote.lineItems.forEach((item, index) => {
+            console.log(`[generateQuotePdf] Adding line item ${index + 1}: ${item.name}`);
+            if (doc.y > 700) {
+                console.log('[generateQuotePdf] Adding new page for line items.');
+                doc.addPage();
+            }
             const y = doc.y;
             doc.text(item.name, columnStartPositions[0], y, { width: columnSpacing[0] });
             doc.text(item.rate.toFixed(2), columnStartPositions[1], y, { width: columnSpacing[1], align: 'right' });
@@ -114,6 +134,7 @@ exports.generateQuotePdf = onRequest((req, res) => { // No longer needs to be as
             doc.text(formatCurrency(item.total), columnStartPositions[4], y, { width: columnSpacing[4], align: 'right' });
             doc.moveDown(1.5);
         });
+        console.log('[generateQuotePdf] Finished line items. Adding totals.');
         
         doc.strokeColor("#aaaaaa").lineWidth(0.5).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
         doc.moveDown();
@@ -126,6 +147,7 @@ exports.generateQuotePdf = onRequest((req, res) => { // No longer needs to be as
         doc.text(formatCurrency(quote.gst), columnStartPositions[3], totalsTop, { width: columnSpacing[3], align: 'right' });
         doc.text(formatCurrency(quote.grandTotal), columnStartPositions[4], totalsTop, { width: columnSpacing[4], align: 'right' });
         doc.moveDown(3);
+        console.log('[generateQuotePdf] Finished totals. Adding terms and conditions.');
         
         // Terms & Conditions
         doc.font('Helvetica-Bold').fontSize(10).text('Terms & Conditions');
@@ -141,10 +163,19 @@ exports.generateQuotePdf = onRequest((req, res) => { // No longer needs to be as
             'This quote is subject to the standard trading conditions.'
         ];
         terms.forEach(term => {
-            doc.text(`• ${term}`, { align: 'left' });
+            // Explicitly set X position to left margin and define width to prevent overflow
+            doc.text(`• ${term}`, doc.page.margins.left, doc.y, { 
+                align: 'left',
+                width: doc.page.width - doc.page.margins.left - doc.page.margins.right
+            });
+            // Add a small gap after each term, .text() might not advance y enough by itself for distinct bullet points.
+            // If text is too close, uncomment and adjust the moveDown factor.
+            // doc.moveDown(0.3); 
         });
+        console.log('[generateQuotePdf] Finished terms and conditions. Finalizing PDF.');
 
         // Finalize the PDF
         doc.end();
+        console.log('[generateQuotePdf] doc.end() called. PDF generation complete.');
     });
 });

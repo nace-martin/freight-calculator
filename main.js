@@ -118,28 +118,27 @@ function setupEventListeners(elements) {
                 return;
             }
 
-            // Show a loading indicator to the user
             elements.downloadPdfBtn.disabled = true;
             elements.downloadPdfBtn.textContent = 'Generating...';
 
             try {
+                // This uses the config file to get the correct URL
                 const pdfGeneratorUrl = CONFIG.PDF_GENERATOR_URL;
 
-                // --- NEW: Timeout logic ---
+                // --- Timeout logic with increased time ---
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30-second timeout
-                // --- End of new logic ---
-
+                // We've increased the timeout to 60 seconds for local testing
+                const timeoutId = setTimeout(() => controller.abort(), 60000); 
+                
                 const response = await fetch(pdfGeneratorUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(state.currentQuoteData),
-                    signal: controller.signal // Link the AbortController to the fetch request
+                    signal: controller.signal 
                 });
 
-                // --- NEW: Clear the timeout if the fetch completes in time ---
+                // Clear the timeout if the fetch completes in time
                 clearTimeout(timeoutId);
-                // --- End of new logic ---
 
                 if (!response.ok) {
                     const errorText = await response.text();
@@ -147,7 +146,16 @@ function setupEventListeners(elements) {
                 }
 
                 const pdfBlob = await response.blob();
-                // ... (rest of the download logic is the same)
+
+                const url = window.URL.createObjectURL(pdfBlob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `EFM_Quote_${Date.now()}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
 
             } catch (error) {
                 if (error.name === 'AbortError') {
@@ -158,33 +166,12 @@ function setupEventListeners(elements) {
                     alert("Could not generate the PDF. Please check the console for details.");
                 }
             } finally {
-                // Re-enable the button
                 elements.downloadPdfBtn.disabled = false;
                 elements.downloadPdfBtn.textContent = 'Download PDF';
             }
         });
-        console.log("Listener attached for server-side PDF generation.");
-    } else {
-        console.error("CRITICAL ERROR: downloadPdfBtn is null. Cannot attach listener.");
-    }
-
-    
-    if (elements.logoutBtn) {
-        elements.logoutBtn.addEventListener('click', () => {
-            auth.signOut().then(() => {
-                console.log('User signed out successfully.');
-                // The onAuthStateChanged listener will automatically redirect to login.html
-            }).catch((error) => {
-                console.error('Sign out error:', error);
-                alert("Error signing out. Please try again.");
-            });
-        });
-        console.log("Listener attached: logoutBtn");
-    } else {
-        console.error("CRITICAL ERROR: logoutBtn is null. Cannot attach listener.");
     }
 }
-
 // 4. Initializer function that runs when the page loads
 async function initializeApp() {
     // 1. A central place for all HTML element references (The "View")
@@ -266,4 +253,4 @@ onAuthStateChanged(auth, user => {
     // User is signed out. Redirect to login.
     window.location.href = 'login.html';
   }
-});
+})
