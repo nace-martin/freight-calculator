@@ -17,53 +17,88 @@
                 <h2 id="app-nav-title"></h2>
             </div>
             <ul class="navbar-links">
-                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="#quotes-view" id="nav-quotes-view">My Quotes</a></li>
+                <li><a href="#customers-view" id="nav-customers-view">Customers</a></li>
                 <li><a href="index.html">New Quote</a></li>
-                <li><a href="dashboard.html">My Quotes</a></li>
             </ul>
             <button id="nav-logout-btn" class="btn-remove">Logout</button>
         </nav>
     </header>
 
     <div class="container">
-        <div class="dashboard-header">
-            <h1>My Saved Quotes</h1>
-            <div class="dashboard-controls">
-                <input type="text" id="search-input" placeholder="Search by route or ID...">
+        <!-- Quotes View -->
+        <div id="quotes-view">
+            <div class="dashboard-header">
+                <h1>My Saved Quotes</h1>
+                <div class="dashboard-controls">
+                    <input type="text" id="search-input" placeholder="Search by route, ID, or Customer...">
+                </div>
             </div>
-        </div>
-        
-        <div id="quotes-loading-spinner" class="spinner-container" style="display: none;">
-            <div class="spinner"></div>
-        </div>
-        
-        <div class="table-container">
-            <table class="quotes-table">
-                <thead>
-                    <tr>
-                        <th>Quote ID</th>
-                        <th>Date</th>
-                        <th>Route</th>
-                        <th>Chargeable Wt.</th>
-                        <th>Grand Total (PGK)</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="quotes-list-container">
-                    <!-- Quotes will be dynamically inserted here by dashboard.js -->
-                </tbody>
-            </table>
+
+            <div id="quotes-loading-spinner" class="spinner-container" style="display: none;">
+                <div class="spinner"></div>
+            </div>
+
+            <div class="table-container">
+                <table class="quotes-table">
+                    <thead>
+                        <tr>
+                            <th>Quote ID</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Route</th>
+                            <th>Chargeable Wt.</th>
+                            <th>Grand Total (PGK)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="quotes-list-container">
+                        <!-- Quotes will be dynamically inserted here -->
+                    </tbody>
+                </table>
+            </div>
+            <p id="no-quotes-message" style="display: none; text-align: center; padding: 2em;">You have not saved any quotes yet.</p>
         </div>
 
-        <p id="no-quotes-message" style="display: none; text-align: center; padding: 2em;">You have not saved any quotes yet.</p>
+        <!-- Customers View -->
+        <div id="customers-view" style="display: none;">
+            <div class="dashboard-header">
+                <h1>Customer Management</h1>
+                <div class="dashboard-controls">
+                    <button id="dashboard-add-new-customer-btn" class="btn-primary">Add New Customer</button>
+                </div>
+            </div>
+
+            <div id="customers-loading-spinner" class="spinner-container" style="display: none;">
+                <div class="spinner"></div>
+            </div>
+
+            <div class="table-container">
+                <table class="customers-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Company</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customers-list-container">
+                        <!-- Customers will be dynamically inserted here -->
+                    </tbody>
+                </table>
+            </div>
+            <p id="no-customers-message" style="display: none; text-align: center; padding: 2em;">You have not added any customers yet.</p>
+        </div>
     </div>
 
-    <!-- The Modal for Viewing Quote Details -->
+    <!-- Modal for Viewing Quote Details -->
     <div id="quote-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Quote Details</h2>
-                <span class="modal-close-btn">&times;</span>
+                <span class="modal-close-btn" id="quote-modal-close-btn">&times;</span>
             </div>
             <div class="modal-body" id="modal-quote-details">
                 <!-- Detailed quote breakdown will be injected here -->
@@ -71,6 +106,44 @@
         </div>
     </div>
 
+    <!-- Customer Add/Edit Modal (Copied from index.html, might need ID adjustments if conflicts arise) -->
+    <!-- Using same IDs for now and relying on dashboard.js to handle its own context -->
+    <div id="customer-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="customer-modal-title">Add New Customer</h2>
+                <span class="modal-close-btn" id="customer-modal-close-btn">&times;</span>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="customer-id-input"> <!-- For editing -->
+                <div class="form-group">
+                    <label for="customer-name">Full Name / Company Name*</label>
+                    <input type="text" id="customer-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer-company">Company (if different from above)</label>
+                    <input type="text" id="customer-company">
+                </div>
+                <div class="form-group">
+                    <label for="customer-email">Email Address</label>
+                    <input type="email" id="customer-email">
+                </div>
+                <div class="form-group">
+                    <label for="customer-phone">Phone Number</label>
+                    <input type="tel" id="customer-phone">
+                </div>
+                <div class="form-group">
+                    <label for="customer-address">Address</label>
+                    <textarea id="customer-address" rows="3"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="save-customer-btn" class="btn-primary">Save Customer</button>
+                    <button type="button" id="cancel-customer-btn" class="btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End of Customer Modal -->
 
     <script type="module" src="dashboard.js"></script>
 </body>
